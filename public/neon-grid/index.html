@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEON GRID</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <script type="module" crossorigin src="/neon-grid/assets/index-TIGwYbvN.js"></script>
+  <link rel="stylesheet" crossorigin href="/neon-grid/assets/index-3DQwMQ-h.css">
+</head>
+<body>
+
+  <!-- BOOT SCREEN -->
+  <div id="screen-boot" class="screen active">
+    <div class="parallax-bg" id="parallax-bg"></div>
+    <!-- Layer 1: vertical light beams (visual hierarchy) -->
+    <div class="boot-beams" aria-hidden="true"></div>
+    <!-- Layer 2: CSS horizontal scanline sweep -->
+    <div class="scanline-sweep" aria-hidden="true"></div>
+    <div class="boot-content">
+      <div class="boot-system-tag" aria-hidden="true">SYS://ARENA.INIT &nbsp;▌</div>
+      <div class="glitch-title" data-text="NEON GRID">NEON GRID</div>
+      <p class="boot-subtitle">CYBERPUNK STRATEGY v1.0</p>
+      <p class="boot-hint">2–4 PLAYERS · LOCAL MULTIPLAYER</p>
+      <!-- CTA with rotating trace border -->
+      <div class="boot-cta-wrap">
+        <button id="btn-boot-start" class="neon-btn boot-cta">ENTER GRID</button>
+      </div>
+      <p class="boot-status" aria-hidden="true">SYSTEM READY · AWAITING INPUT</p>
+    </div>
+    <!-- Layer 3: canvas particles + hex pattern + canvas scanline -->
+    <canvas id="bg-canvas"></canvas>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div id="screen-setup" class="screen">
+    <div class="parallax-bg"></div>
+    <div class="setup-container">
+      <h2 class="setup-title">SYSTEM CONFIGURATION</h2>
+
+      <div class="setup-grid">
+        <!-- Player Count -->
+        <div class="setup-section">
+          <label class="setup-label">PLAYER COUNT</label>
+          <div class="player-count-selector">
+            <button class="count-btn active" data-count="2">2</button>
+            <button class="count-btn" data-count="3">3</button>
+            <button class="count-btn" data-count="4">4</button>
+          </div>
+        </div>
+
+        <!-- Player Names -->
+        <div class="setup-section">
+          <label class="setup-label">PLAYER NAMES</label>
+          <div id="player-names-container"></div>
+        </div>
+
+        <!-- Board Size (F31: square only) -->
+        <div class="setup-section">
+          <label class="setup-label">BOARD SIZE</label>
+          <div class="board-size-selector">
+            <button class="size-btn" data-size="6">6×6</button>
+            <button class="size-btn active" data-size="7">7×7</button>
+            <button class="size-btn" data-size="8">8×8</button>
+            <button class="size-btn" data-size="9">9×9</button>
+			<button class="size-btn" data-size="10">10×10</button>
+			<button class="size-btn" data-size="11">11x11</button>
+			<button class="size-btn" data-size="12">12×12</button>
+          </div>
+        </div>
+
+        <!-- Expert Mode (board rotation) -->
+        <div class="setup-section">
+          <label class="setup-label">EXPERT MODE</label>
+          <div class="timer-config">
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-rotation" class="neon-checkbox" />
+              <span class="toggle-track"></span>
+              <span class="toggle-text">BOARD ROTATES AFTER SCORING</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="setup-section">
+          <label class="setup-label">TURN TIMER</label>
+          <div class="timer-config">
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-timer" class="neon-checkbox" />
+              <span class="toggle-track"></span>
+              <span class="toggle-text">ENABLED</span>
+            </label>
+            <div id="timer-duration-wrap" class="timer-duration hidden">
+              <input type="number" id="input-timer" min="5" max="300" value="30" class="neon-input size-input" />
+              <span class="unit-label">SEC</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-launch" class="neon-btn primary launch-btn">LAUNCH GAME</button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="screen-game" class="screen">
+    <!-- Scoreboard -->
+    <div id="scoreboard" class="scoreboard"></div>
+
+    <!-- Canvas area -->
+    <div id="canvas-wrap">
+      <canvas id="game-canvas"></canvas>
+      <div id="timer-bar-wrap" class="hidden">
+        <div id="timer-label">TIME</div>
+        <div id="timer-bar-track">
+          <div id="timer-bar-fill"></div>
+        </div>
+        <div id="timer-countdown">30</div>
+      </div>
+      <div id="ai-status-bar" class="hidden">
+        <div class="ai-swatch"></div>
+        <div class="ai-status-name"></div>
+        <div class="ai-status-text">CALCULATING</div>
+        <div class="ai-status-dots"></div>
+        <div class="ai-status-track"><div class="ai-status-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- Game controls -->
+    <div id="game-controls">
+      <button id="btn-sound" class="icon-btn" title="Toggle Sound">🔊</button>
+      <button id="btn-setup" class="icon-btn" title="Back to Setup">⚙</button>
+    </div>
+
+    <!-- In-game results overlay (shown instead of separate endscreen) -->
+    <div id="game-over-panel" class="hidden">
+      <div class="game-over-inner">
+        <h2 class="game-over-title">GRID COMPLETE</h2>
+        <div id="in-game-rankings" class="in-game-rankings"></div>
+        <div class="game-over-actions">
+          <button id="btn-replay-ingame" class="neon-btn primary">PLAY AGAIN</button>
+          <button id="btn-new-game-ingame" class="neon-btn">NEW GAME</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="screen-endscreen" class="screen">
+    <div class="parallax-bg"></div>
+    <div class="endscreen-content">
+      <h2 class="endscreen-title">GRID COMPLETE</h2>
+      <div id="final-rankings" class="rankings-container"></div>
+      <div class="endscreen-actions">
+        <button id="btn-replay" class="neon-btn primary">PLAY AGAIN</button>
+        <button id="btn-new-game" class="neon-btn">NEW GAME</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div id="confirm-overlay" class="confirm-overlay hidden">
+    <div class="confirm-box">
+      <p id="confirm-message">Reset current game?</p>
+      <div class="confirm-actions">
+        <button id="confirm-yes" class="neon-btn small">YES</button>
+        <button id="confirm-no" class="neon-btn small">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
