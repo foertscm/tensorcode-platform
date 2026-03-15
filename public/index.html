@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TENSORCODE // BOOT</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- Bunny Fonts: GDPR-compliant Google Fonts mirror (no IP logging, EU-hosted) -->
+  <link href="https://fonts.bunny.net/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -360,9 +361,66 @@
       line-height: 2;
     }
 
+    /* ─── IMPRESSUM ─── */
+    .impressum {
+      margin-top: 64px;
+      width: 100%;
+      max-width: 940px;
+      border-top: 1px solid var(--dim);
+      padding-top: 32px;
+    }
+
+    .impressum-heading {
+      font-size: 9px;
+      letter-spacing: 0.55em;
+      color: var(--dim);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .impressum-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--dim);
+      opacity: 0.4;
+    }
+
+    .impressum-grid {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 8px 28px;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .impressum-key {
+      color: var(--dim);
+      letter-spacing: 0.2em;
+      white-space: nowrap;
+    }
+
+    .impressum-val {
+      color: #55556a;
+    }
+
+    .impressum-link {
+      color: #55556a;
+      text-decoration: none;
+      border-bottom: 1px solid var(--dim);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .impressum-link:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+
     /* ─── RESPONSIVE ─── */
     @media (max-width: 480px) {
       .games-grid { grid-template-columns: 1fr; }
+      .impressum-grid { grid-template-columns: 1fr; gap: 2px 0; }
+      .impressum-key { color: var(--dim); font-size: 9px; margin-top: 10px; }
     }
   </style>
 </head>
@@ -386,6 +444,23 @@
 
   <div class="footer">
     TENSORCODE OS v2.0.77 &nbsp;·&nbsp; NEURAL LINK ACTIVE &nbsp;·&nbsp; ALL PROGRAMS VERIFIED
+  </div>
+
+  <div class="impressum">
+    <div class="impressum-heading">§ IMPRESSUM</div>
+    <div class="impressum-grid">
+      <span class="impressum-key">BETREIBER</span>
+      <span class="impressum-val">Martin Förtsch</span>
+
+      <span class="impressum-key">KONTAKT</span>
+      <span class="impressum-val"><a class="impressum-link" id="impressum-mail" href="#">—</a></span>
+
+      <span class="impressum-key">ZWECK</span>
+      <span class="impressum-val">Privates, nicht-kommerzielles Projekt · Keine geschäftliche Tätigkeit</span>
+
+      <span class="impressum-key">DATENSCHUTZ</span>
+      <span class="impressum-val">Keine Cookies · Kein Tracking · Keine Datenerhebung · Schriften werden von einem EU-Server geladen (Bunny Fonts)</span>
+    </div>
   </div>
 </div>
 
@@ -618,6 +693,14 @@ function renderCards() {
     grid.appendChild(a);
   });
 }
+
+// ─── IMPRESSUM: assemble email at runtime to deter address harvesting bots ───
+(function () {
+  const u = 'martin.foertsch', d = 'gmail.com';
+  const el = document.getElementById('impressum-mail');
+  el.href = 'mailto:' + u + '@' + d;
+  el.textContent = u + '@' + d;
+})();
 
 // ─── START ───
 runBoot();
