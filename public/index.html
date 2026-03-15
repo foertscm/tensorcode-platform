@@ -1,14 +1,626 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TENSORCODE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TENSORCODE // BOOT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #04040a;
+      --cyan: #00f5ff;
+      --pink: #ff0080;
+      --green: #39ff14;
+      --text: #8888aa;
+      --dim: #333344;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* ─── CANVAS GRID ─── */
+    #grid-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ─── SCANLINES ─── */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0, 0, 0, 0.12) 3px,
+        rgba(0, 0, 0, 0.12) 4px
+      );
+    }
+
+    /* ─── VIGNETTE ─── */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+    }
+
+    /* ─── MAIN CONTAINER ─── */
+    .container {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px 64px;
+    }
+
+    /* ─── BOOT TERMINAL ─── */
+    .boot-terminal {
+      width: 100%;
+      max-width: 680px;
+      font-size: 12px;
+      line-height: 1.9;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+
+    .boot-line {
+      opacity: 0;
+      white-space: pre;
+      transition: opacity 0.1s;
+    }
+    .boot-line.on { opacity: 1; }
+    .boot-line.dim { color: #334433; }
+    .boot-line.accent { color: var(--cyan); }
+    .boot-line.warn { color: var(--pink); }
+
+    .boot-cursor {
+      display: inline-block;
+      width: 7px;
+      height: 13px;
+      background: var(--green);
+      vertical-align: middle;
+      margin-left: 2px;
+      animation: blink 0.9s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ─── TITLE SECTION ─── */
+    .title-section {
+      text-align: center;
+      margin-bottom: 56px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .title-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .main-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(36px, 9vw, 96px);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: var(--cyan);
+      text-shadow:
+        0 0 20px var(--cyan),
+        0 0 50px rgba(0, 245, 255, 0.4),
+        0 0 100px rgba(0, 245, 255, 0.15);
+      position: relative;
+      display: inline-block;
+      animation: flicker 8s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 97%, 100% { opacity: 1; }
+      97.5% { opacity: 0.85; }
+      98% { opacity: 1; }
+      98.5% { opacity: 0.7; }
+      99% { opacity: 1; }
+    }
+
+    .main-title::before {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      color: var(--pink);
+      clip-path: polygon(0 25%, 100% 25%, 100% 45%, 0 45%);
+      animation: glitch-a 5s infinite;
+    }
+    .main-title::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      color: var(--green);
+      clip-path: polygon(0 62%, 100% 62%, 100% 76%, 0 76%);
+      animation: glitch-b 5s infinite;
+    }
+
+    @keyframes glitch-a {
+      0%, 100% { transform: translate(0); opacity: 0; }
+      10% { transform: translate(-3px, 1px); opacity: 0.8; }
+      10.5% { transform: translate(0); opacity: 0; }
+      60% { transform: translate(0); opacity: 0; }
+      60.5% { transform: translate(3px, -1px); opacity: 0.6; }
+      61% { transform: translate(0); opacity: 0; }
+    }
+    @keyframes glitch-b {
+      0%, 100% { transform: translate(0); opacity: 0; }
+      30% { transform: translate(0); opacity: 0; }
+      30.5% { transform: translate(2px, 2px); opacity: 0.7; }
+      31% { transform: translate(0); opacity: 0; }
+      80% { transform: translate(0); opacity: 0; }
+      80.5% { transform: translate(-2px, -1px); opacity: 0.5; }
+      81% { transform: translate(0); opacity: 0; }
+    }
+
+    .title-sub {
+      font-size: 11px;
+      letter-spacing: 0.55em;
+      color: var(--dim);
+      margin-top: 14px;
+      text-transform: uppercase;
+    }
+
+    /* ─── SELECT LABEL ─── */
+    .select-label {
+      font-size: 10px;
+      letter-spacing: 0.6em;
+      color: var(--pink);
+      margin-bottom: 36px;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.5s;
+      animation: pulse-label 3s ease-in-out infinite;
+    }
+    .select-label.visible { opacity: 1; }
+
+    @keyframes pulse-label {
+      0%, 100% { text-shadow: 0 0 8px var(--pink); }
+      50% { text-shadow: 0 0 20px var(--pink), 0 0 40px rgba(255,0,128,0.3); }
+    }
+
+    /* ─── GAME CARDS GRID ─── */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 940px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .games-grid.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── GAME CARD ─── */
+    .game-card {
+      --c: var(--cyan);
+      position: relative;
+      background: rgba(4, 4, 10, 0.92);
+      border: 1px solid var(--c);
+      padding: 28px 26px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+      transition: transform 0.2s ease, box-shadow 0.25s ease;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(140deg, rgba(255,255,255,0.03) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    /* scan line sweep on hover */
+    .game-card::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+      pointer-events: none;
+      transition: top 0.4s ease;
+    }
+    .game-card:hover::after { top: 100%; }
+
+    .game-card:hover {
+      transform: translateY(-5px);
+      box-shadow:
+        0 0 28px var(--c),
+        0 0 60px rgba(0,0,0,0.6),
+        inset 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    /* chamfered corner accents */
+    .card-corner {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+    }
+    .card-corner.tl { top: -1px; left: -1px; border-top: 2px solid var(--c); border-left: 2px solid var(--c); }
+    .card-corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--c); border-right: 2px solid var(--c); }
+
+    .card-index {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      margin-bottom: 16px;
+    }
+
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9px;
+      letter-spacing: 0.45em;
+      color: var(--c);
+      margin-bottom: 10px;
+    }
+    .card-tag::before {
+      content: '';
+      display: inline-block;
+      width: 18px;
+      height: 1px;
+      background: var(--c);
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+      text-shadow: 0 0 18px var(--c);
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+
+    .card-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      color: var(--c);
+      text-transform: uppercase;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 16px;
+      width: 100%;
+    }
+    .card-launch-arrow {
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+    .game-card:hover .card-launch-arrow { transform: translateX(5px); }
+
+    /* coming-soon state */
+    .game-card.soon {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .card-badge {
+      position: absolute;
+      top: 14px;
+      right: 20px;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: var(--dim);
+      border: 1px solid var(--dim);
+      padding: 2px 8px;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      margin-top: 72px;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: var(--dim);
+      text-align: center;
+      line-height: 2;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 480px) {
+      .games-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <h1>TENSORCODE</h1>
-  <ul>
-    <li><a href="/neon-grid/">Neon Grid</a></li>
-	<li><a href="/neon-drift/">Neon Drift</a></li>
-  </ul>
+
+<canvas id="grid-canvas"></canvas>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<div class="container">
+  <div class="boot-terminal" id="boot-terminal"></div>
+
+  <div class="title-section" id="title-section">
+    <div class="main-title" data-text="TENSORCODE">TENSORCODE</div>
+    <div class="title-sub">// Neural Arcade Network //</div>
+  </div>
+
+  <div class="select-label" id="select-label">⬡&nbsp;&nbsp;Select Program&nbsp;&nbsp;⬡</div>
+
+  <div class="games-grid" id="games-grid"></div>
+
+  <div class="footer">
+    TENSORCODE OS v2.0.77 &nbsp;·&nbsp; NEURAL LINK ACTIVE &nbsp;·&nbsp; ALL PROGRAMS VERIFIED
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  GAMES CONFIG
+//  To add a new game, append an object to this array.
+//  Set comingSoon: true to show a locked card.
+// ═══════════════════════════════════════════════════════════════
+const GAMES = [
+  {
+    title:       'NEON GRID',
+    tags:        'PUZZLE · ARCADE',
+    description: 'Navigate the electric grid. Survive the pulse.',
+    url:         '/neon-grid/',
+    color:       '#00f5ff',
+  },
+  {
+    title:       'NEON DRIFT',
+    tags:        'RACING · SURVIVAL',
+    description: 'Burn chrome through the neon canyon. Don\'t crash.',
+    url:         '/neon-drift/',
+    color:       '#ff0080',
+  },
+  // {
+  //   title:       'DARKWAVE',
+  //   tags:        'STEALTH · ACTION',
+  //   description: 'Infiltrate the corporate mainframe. Leave no trace.',
+  //   url:         '/darkwave/',
+  //   color:       '#c800ff',
+  //   comingSoon:  true,
+  // },
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  CANVAS: perspective grid + stars
+// ═══════════════════════════════════════════════════════════════
+const canvas = document.getElementById('grid-canvas');
+const ctx    = canvas.getContext('2d');
+let gridOffset = 0;
+
+const stars = Array.from({ length: 120 }, () => ({
+  x: Math.random(),
+  y: Math.random() * 0.52,
+  r: Math.random() * 1.2 + 0.2,
+  alpha: Math.random() * 0.6 + 0.1,
+  flicker: Math.random() * Math.PI * 2,
+}));
+
+function resize() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function drawFrame(ts) {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const horizonY = H * 0.52;
+  const midX     = W * 0.5;
+
+  // ── Stars ──
+  stars.forEach(s => {
+    const flicker = Math.sin(ts * 0.001 + s.flicker) * 0.3 + 0.7;
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 220, 255, ${s.alpha * flicker})`;
+    ctx.fill();
+  });
+
+  // ── Atmosphere glow above horizon ──
+  const atmoGrad = ctx.createLinearGradient(0, horizonY - H * 0.25, 0, horizonY);
+  atmoGrad.addColorStop(0, 'transparent');
+  atmoGrad.addColorStop(1, 'rgba(255, 0, 128, 0.08)');
+  ctx.fillStyle = atmoGrad;
+  ctx.fillRect(0, horizonY - H * 0.25, W, H * 0.25);
+
+  // ── Perspective grid ──
+  const numV = 18, numH = 16;
+  const spread = W * 1.4;
+
+  // vertical converging lines
+  for (let i = 0; i <= numV; i++) {
+    const t = i / numV;
+    const bx = midX + (t - 0.5) * spread;
+    const alpha = 0.18 * (1 - Math.abs(t - 0.5) * 1.4);
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(0, 245, 255, ${Math.max(0, alpha)})`;
+    ctx.lineWidth = 0.6;
+    ctx.moveTo(midX, horizonY);
+    ctx.lineTo(bx, H);
+    ctx.stroke();
+  }
+
+  // horizontal lines (scrolling)
+  for (let i = 0; i <= numH; i++) {
+    const t = ((i / numH) + gridOffset) % 1;
+    const ease  = t * t;
+    const y     = horizonY + (H - horizonY) * ease;
+    const alpha = 0.22 * (ease * 0.7 + 0.3);
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(0, 245, 255, ${alpha})`;
+    ctx.lineWidth = 0.5;
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+
+  // ── Horizon line ──
+  const hGrad = ctx.createLinearGradient(0, 0, W, 0);
+  hGrad.addColorStop(0,   'transparent');
+  hGrad.addColorStop(0.15,'rgba(255,0,128,0.5)');
+  hGrad.addColorStop(0.5, 'rgba(255,0,128,0.95)');
+  hGrad.addColorStop(0.85,'rgba(255,0,128,0.5)');
+  hGrad.addColorStop(1,   'transparent');
+
+  ctx.beginPath();
+  ctx.strokeStyle = hGrad;
+  ctx.lineWidth   = 1.5;
+  ctx.moveTo(0, horizonY); ctx.lineTo(W, horizonY);
+  ctx.stroke();
+
+  // glow halo
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(255,0,128,0.12)';
+  ctx.lineWidth   = 12;
+  ctx.moveTo(0, horizonY); ctx.lineTo(W, horizonY);
+  ctx.stroke();
+
+  gridOffset = (gridOffset + 0.0025) % 1;
+  requestAnimationFrame(drawFrame);
+}
+
+resize();
+window.addEventListener('resize', resize);
+requestAnimationFrame(drawFrame);
+
+// ═══════════════════════════════════════════════════════════════
+//  BOOT SEQUENCE
+// ═══════════════════════════════════════════════════════════════
+const BOOT_LINES = [
+  { text: `TENSORCODE NEURAL OS  v2.0.77`, cls: 'accent' },
+  { text: `Copyright (C) 2077 TENSORCODE Corp. All rights reserved.`, cls: 'dim' },
+  { text: `` },
+  { text: `Initializing neural subsystems...` },
+  { text: `[OK]  Quantum memory array ............... 512 TB` },
+  { text: `[OK]  Neon interface drivers ............. loaded` },
+  { text: `[OK]  Cyberdeck handshake ................. verified` },
+  { text: `[OK]  Reality anchor ...................... stable` },
+  { text: `` },
+  { text: `Scanning program registry...` },
+  { text: `[FOUND]  ${GAMES.length} executable(s) ready`, cls: '' },
+  { text: `` },
+  { text: `READY.`, cls: 'warn' },
+];
+
+const DELAYS = [0, 80, 140, 260, 430, 580, 720, 860, 980, 1140, 1380, 1500, 1750];
+
+const termEl = document.getElementById('boot-terminal');
+
+function runBoot() {
+  // append cursor placeholder
+  const cursorLine = document.createElement('div');
+  cursorLine.className = 'boot-line on';
+  cursorLine.innerHTML = '<span class="boot-cursor"></span>';
+  termEl.appendChild(cursorLine);
+
+  BOOT_LINES.forEach((line, i) => {
+    setTimeout(() => {
+      const el   = document.createElement('div');
+      el.className = `boot-line on${line.cls ? ' ' + line.cls : ''}`;
+      el.textContent = line.text || '\u00a0';
+      termEl.insertBefore(el, cursorLine);
+    }, DELAYS[i] || 0);
+  });
+
+  // after last line, kick off the UI reveal
+  setTimeout(revealUI, DELAYS[DELAYS.length - 1] + 500);
+}
+
+function revealUI() {
+  // fade out terminal
+  termEl.style.transition = 'opacity 0.6s';
+  termEl.style.opacity    = '0';
+  setTimeout(() => termEl.remove(), 650);
+
+  // title
+  setTimeout(() => {
+    document.getElementById('title-section').classList.add('visible');
+  }, 300);
+
+  // select label
+  setTimeout(() => {
+    document.getElementById('select-label').classList.add('visible');
+  }, 800);
+
+  // cards
+  setTimeout(() => {
+    renderCards();
+    document.getElementById('games-grid').classList.add('visible');
+  }, 1050);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER GAME CARDS
+// ═══════════════════════════════════════════════════════════════
+function renderCards() {
+  const grid = document.getElementById('games-grid');
+  grid.innerHTML = '';
+
+  GAMES.forEach((game, idx) => {
+    const padded = String(idx + 1).padStart(2, '0');
+    const a      = document.createElement('a');
+    a.className  = 'game-card' + (game.comingSoon ? ' soon' : '');
+    a.href       = game.comingSoon ? '#' : game.url;
+    a.style.setProperty('--c', game.color);
+    a.innerHTML  = `
+      <div class="card-corner tl"></div>
+      <div class="card-corner br"></div>
+      ${game.comingSoon ? '<div class="card-badge">COMING SOON</div>' : ''}
+      <div class="card-index">[ ${padded} / ${String(GAMES.length).padStart(2,'0')} ]</div>
+      <div class="card-tag">${game.tags}</div>
+      <div class="card-title">${game.title}</div>
+      <div class="card-desc">${game.description}</div>
+      <div class="card-launch">
+        ${game.comingSoon ? 'LOCKED' : 'LAUNCH PROGRAM'}
+        <span class="card-launch-arrow">${game.comingSoon ? '⊘' : '▶'}</span>
+      </div>
+    `;
+    grid.appendChild(a);
+  });
+}
+
+// ─── START ───
+runBoot();
+</script>
 </body>
 </html>
